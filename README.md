@@ -2,7 +2,7 @@
 
 > **Protótipo de extensão universitária** | Região Metropolitana de Belém, PA
 
-> 🚧 **Status:** Documentação e arquitetura em andamento. Implementação iniciando em breve.
+> 🚧 **Status:** Camada de domínio implementada. Desenvolvimento dos casos de uso em andamento.
 
 ---
 
@@ -49,16 +49,10 @@ Esta separação é implementada em três camadas:
 
 ```
 acailoop/
-├── domain/          # Entidades puras (sem dependências externas)
-│   ├── entities/    # Batedor, Motorista, Olaria, Coleta
-│   └── repositories/# Interfaces (contratos abstratos)
-├── use_cases/       # Casos de uso (regras de aplicação)
-│   ├── solicitar_coleta.py
-│   ├── alocar_motorista.py
-│   └── confirmar_entrega.py
-└── infrastructure/  # Implementações concretas (Flask, Supabase)
-    ├── api/         # Rotas HTTP
-    └── database/    # Repositórios Supabase
+├── domain/              # Pure business entities (no external dependencies)
+│   └── entities.py      # AcaiProducer, Driver, Brickyard, Collection ✅
+├── use_cases/           # Application rules (in progress)
+└── infrastructure/      # Concrete implementations: Flask, Supabase (in progress)
 ```
 
 ---
@@ -69,43 +63,49 @@ Entidades centrais do sistema. Este núcleo é **completamente isolado** de fram
 
 ```mermaid
 classDiagram
-    class Batedor {
+    class AcaiProducer {
         +UUID id
-        +String nome_estabelecimento
-        +Point coordenadas_geograficas
-        +Float volume_atual_kg
-        +solicitar_coleta()
+        +String business_name
+        +Float latitude
+        +Float longitude
+        +Float current_volume_kg
+        +request_collection()
     }
 
-    class Motorista {
+    class Driver {
         +UUID id
-        +String placa_veiculo
-        +Float capacidade_maxima_kg
-        +Enum status_disponibilidade
-        +aceitar_rota()
-        +confirmar_retirada()
+        +String name
+        +String license_plate
+        +Float max_capacity_kg
+        +DriverStatus status
+        +accept_route()
+        +complete_route()
     }
 
-    class Olaria {
+    class Brickyard {
         +UUID id
-        +String razao_social
-        +Float capacidade_armazenamento_ton
-        +registrar_recebimento()
+        +String company_name
+        +Float latitude
+        +Float longitude
+        +Float storage_capacity_ton
+        +register_receipt()
     }
 
-    class Coleta {
+    class Collection {
         +UUID id
-        +Enum status
-        +DateTime data_agendamento
-        +Float volume_coletado
+        +CollectionStatus status
+        +DateTime scheduled_at
+        +Float collected_volume_kg
+        +start()
+        +complete()
     }
 
-    Batedor "1" -- "*" Coleta : solicita
-    Motorista "1" -- "*" Coleta : executa
-    Coleta "*" -- "1" Olaria : destinada a
+    AcaiProducer "1" -- "*" Collection : requests
+    Driver "1" -- "*" Collection : executes
+    Collection "*" -- "1" Brickyard : delivered to
 ```
 
-> **Nota sobre `Enum status`:** os estados possíveis são `PENDENTE → EM_ROTA → CONCLUIDA`. Transições de estado são validadas na camada de Use Cases, não no banco de dados.
+> **Note on `CollectionStatus`:** possible states are `PENDING → ON_ROUTE → COMPLETED`. State transitions are validated in the Use Cases layer, not in the database.
 
 ---
 
@@ -169,28 +169,28 @@ O `Serviço de Otimização de Rota` é o **coração do valor entregue pela pla
 ## 4. Fluxo Principal — Ciclo de uma Coleta
 
 ```
-Batedor solicita coleta (volume_kg)
+AcaiProducer requests collection (current_volume_kg)
         │
         ▼
-API cria Coleta [PENDENTE] no Supabase
+API creates Collection [PENDING] in Supabase
         │
         ▼
-Motorista disponível recebe notificação
+Available Driver receives notification
         │
         ▼
-Algoritmo de rota gera sequência otimizada
+Routing algorithm generates optimized sequence
         │
         ▼
-Motorista executa coleta → confirma_retirada()
+Driver executes collection → collection.start()
         │
         ▼
-Coleta atualizada para [EM_ROTA]
+Collection updated to [ON_ROUTE]
         │
         ▼
-Olaria confirma recebimento → registrar_recebimento()
+Brickyard confirms receipt → register_receipt()
         │
         ▼
-Coleta finalizada [CONCLUIDA] — volume registrado
+Collection finalized [COMPLETED] — volume recorded
 ```
 
 ---
@@ -198,7 +198,7 @@ Coleta finalizada [CONCLUIDA] — volume registrado
 ## 5. Stack Completo
 
 ```
-Backend:     Python 3.11 · Flask · Clean Architecture
+Backend:     Python 3.14 · Flask · Clean Architecture
 Banco:       Supabase (PostgreSQL) · Autenticação JWT via Supabase Auth
 Frontend:    PWA · Leaflet.js · OpenStreetMap
 Deploy:      Vercel (frontend) · Render ou Railway (API)
@@ -211,7 +211,7 @@ Testes:      pytest · repositórios in-memory para domain tests
 
 - **Cold start:** o free tier do Render hiberna após 15 min de inatividade (~30s na primeira requisição). Aceitável para validação, mitigável com Railway ou upgrade.
 - **Roteirização simplificada:** a heurística atual não considera trânsito real, janelas de horário ou capacidade de carga acumulada por parada.
-- **Volume manual:** o `volume_atual_kg` é informado pelo próprio Batedor. Em produção, isso seria estimado por histórico ou sensor.
+- **Volume manual:** o `current_volume_kg` é informado pelo próprio `AcaiProducer`. Em produção, isso seria estimado por histórico ou sensor.
 
 ---
 
