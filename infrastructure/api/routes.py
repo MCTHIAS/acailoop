@@ -62,3 +62,25 @@ def create_collection():
         return jsonify({"error": f"Missing field: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/collections", methods=["GET"])
+def list_collections():
+    try:
+        status_filter = request.args.get("status", "PENDING")
+        supabase = get_supabase_client()
+        result = supabase.table("collections").select("*").eq("status", status_filter).execute()
+        return jsonify(result.data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/collections/<collection_id>", methods=["PATCH"])
+def update_collection(collection_id):
+    data = request.get_json()
+    try:
+        supabase = get_supabase_client()
+        result = supabase.table("collections").update({
+            "status": data["status"]
+        }).eq("id", collection_id).execute()
+        return jsonify({"message": "Collection updated.", "data": result.data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
 
 export default function ProducerPage() {
   const [volume, setVolume] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
 
   async function handleRequestCollection() {
     if (!volume || parseFloat(volume) <= 0) {
@@ -11,8 +19,15 @@ export default function ProducerPage() {
       return;
     }
 
+    if (!user) {
+      setStatus({ type: "error", message: "Usuário não autenticado." });
+      return;
+    }
+
     setLoading(true);
     setStatus(null);
+
+    const metadata = user.user_metadata;
 
     try {
       const response = await fetch("http://127.0.0.1:5000/collections", {
@@ -20,17 +35,17 @@ export default function ProducerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           producer: {
-            business_name: "Açaí do Seu Zé",
+            business_name: metadata.name || "Batedor",
             latitude: -1.4558,
             longitude: -48.4902,
           },
           driver: {
-            name: "Carlos",
-            license_plate: "ABC-1234",
+            name: "A alocar",
+            license_plate: "N/A",
             max_capacity_kg: 1000.0,
           },
           brickyard: {
-            company_name: "Olaria São João",
+            company_name: "A definir",
             latitude: -1.4321,
             longitude: -48.4711,
             storage_capacity_ton: 50.0,
@@ -61,12 +76,17 @@ export default function ProducerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-purple-950 flex items-center justify-center p-4">
+    <div className="flex-1 bg-purple-950 flex items-center justify-center p-4" style={{ minHeight: "calc(100vh - 56px)" }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <span className="text-5xl">🫐</span>
           <h1 className="text-2xl font-bold text-purple-900 mt-2">AçaíLoop</h1>
           <p className="text-gray-500 text-sm mt-1">Portal do Batedor</p>
+          {user && (
+            <p className="text-purple-700 text-sm font-medium mt-2">
+              Olá, {user.user_metadata.name || user.email}!
+            </p>
+          )}
         </div>
 
         <div className="mb-6">
