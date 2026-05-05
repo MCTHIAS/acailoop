@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from infrastructure.database.supabase_client import get_supabase_client
 from domain.entities import AcaiProducer, Driver, Brickyard
 from use_cases.request_collection import request_collection
 
 app = Flask(__name__)
+CORS(app)
+app.config['JSON_AS_ASCII'] = False
 
 @app.route("/health", methods=["GET"])
 def health_check():
