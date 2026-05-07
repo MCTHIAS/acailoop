@@ -76,10 +76,9 @@ export default function ProducerPage() {
   }
 
   return (
-    <div className="flex-1 bg-purple-950 flex items-center justify-center p-4" style={{ minHeight: "calc(100vh - 56px)" }}>
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#8b5cf6] px-4 pt-32 pb-8">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <span className="text-5xl">🫐</span>
           <h1 className="text-2xl font-bold text-purple-900 mt-2">AçaíLoop</h1>
           <p className="text-gray-500 text-sm mt-1">Portal do Batedor</p>
           {user && (
@@ -107,7 +106,7 @@ export default function ProducerPage() {
           disabled={loading}
           className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-4 rounded-xl text-lg transition disabled:opacity-50"
         >
-          {loading ? "Solicitando..." : "🚛 Solicitar Coleta"}
+          {loading ? "Solicitando..." : "Solicitar Coleta"}
         </button>
 
         {status && (

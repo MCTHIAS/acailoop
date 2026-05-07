@@ -7,6 +7,7 @@ import DriverPage from "./pages/DriverPage";
 import BrickyardPage from "./pages/BrickyardPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import LandingPage from "./pages/LandingPage";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -24,7 +25,7 @@ export default function App() {
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen bg-purple-950 flex items-center justify-center">
+    <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
       <span className="text-white text-xl">Carregando...</span>
     </div>
   );
@@ -35,17 +36,19 @@ export default function App() {
     if (!role) return "/profile";
     if (role === "motorista") return "/driver";
     if (role === "olaria") return "/brickyard";
-    return "/";
+    return "/producer";
   };
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <Navbar session={session} />
         <Routes>
+          <Route path="/" element={<LandingPage />} />
+          
           <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to={getHomeRoute()} />} />
           
-          <Route path="/" element={
+          <Route path="/producer" element={
             !session ? <Navigate to="/auth" /> : 
             session.user.user_metadata?.role === "batedor" ? <ProducerPage /> : <Navigate to={getHomeRoute()} />
           } />

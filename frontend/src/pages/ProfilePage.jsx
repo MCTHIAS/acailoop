@@ -62,7 +62,7 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="flex-1 flex items-center justify-center p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#8b5cf6] px-4 pt-32 pb-8">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <h1 className="text-2xl font-bold text-purple-900 mb-6 text-center">Meu Perfil</h1>
         

@@ -75,13 +75,9 @@ export default function AuthPage() {
   }
 
   return (
-    <div
-      className="flex items-center justify-center bg-purple-950 p-4"
-      style={{ minHeight: "calc(100vh - 56px)" }}
-    >
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#8b5cf6] px-4 pt-32 pb-8">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 my-8">
         <div className="text-center mb-6">
-          <span className="text-5xl">🫐</span>
           <h1 className="text-2xl font-bold text-purple-900 mt-2">AçaíLoop</h1>
           <p className="text-gray-500 text-sm mt-1">
             {isLogin ? "Faça login para continuar" : "Crie sua conta"}

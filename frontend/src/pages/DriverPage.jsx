@@ -38,13 +38,9 @@ export default function DriverPage() {
   }, []);
 
   return (
-    <div
-      className="flex flex-col items-center bg-blue-950 p-6"
-      style={{ minHeight: "calc(100vh - 56px)" }}
-    >
+    <div className="min-h-screen w-full flex flex-col items-center bg-[#8b5cf6] px-4 pt-32 pb-8">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <span className="text-5xl">🚛</span>
           <h1 className="text-2xl font-bold text-white mt-2">Portal do Motorista</h1>
           <p className="text-blue-300 text-sm mt-1">Coletas disponíveis para retirada</p>
         </div>
@@ -53,7 +49,6 @@ export default function DriverPage() {
           <p className="text-white text-center">Carregando coletas...</p>
         ) : collections.length === 0 ? (
           <div className="bg-white rounded-2xl p-8 text-center">
-            <span className="text-4xl">📭</span>
             <p className="text-gray-500 mt-4">Nenhuma coleta pendente no momento.</p>
           </div>
         ) : (
@@ -71,8 +66,8 @@ export default function DriverPage() {
                 </div>
 
                 <div className="flex gap-4 text-sm text-gray-600 mb-4">
-                  <span>⚖️ {col.collected_volume_kg} kg</span>
-                  <span>📅 {new Date(col.scheduled_at).toLocaleDateString("pt-BR")}</span>
+                  <span>Peso: {col.collected_volume_kg} kg</span>
+                  <span>Data: {new Date(col.scheduled_at).toLocaleDateString("pt-BR")}</span>
                 </div>
 
                 <button
@@ -80,7 +75,7 @@ export default function DriverPage() {
                   disabled={updating === col.id}
                   className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl transition disabled:opacity-50"
                 >
-                  {updating === col.id ? "Aceitando..." : "✅ Aceitar Rota"}
+                  {updating === col.id ? "Aceitando..." : "Aceitar Rota"}
                 </button>
               </div>
             ))}
