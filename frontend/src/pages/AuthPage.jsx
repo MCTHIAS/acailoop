@@ -31,8 +31,9 @@ export default function AuthPage() {
         setStatus({ type: "error", message: "Preencha a placa e a capacidade." });
         return;
       }
-      if (role === "olaria" && !address) {
-        setStatus({ type: "error", message: "Preencha o endereço." });
+      // Batedor e Olaria agora exigem endereço
+      if ((role === "olaria" || role === "batedor") && !address) {
+        setStatus({ type: "error", message: "Preencha o endereço completo." });
         return;
       }
     }
@@ -55,7 +56,7 @@ export default function AuthPage() {
               contact,
               plate: role === "motorista" ? plate : null,
               capacity: role === "motorista" ? capacity : null,
-              address: role === "olaria" ? address : null,
+              address: (role === "olaria" || role === "batedor") ? address : null,
             }
           }
         });
@@ -150,13 +151,14 @@ export default function AuthPage() {
               </div>
             )}
 
-            {role === "olaria" && (
+            {(role === "olaria" || role === "batedor") && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Endereço Completo</label>
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Rua, Número, Bairro - Belém/PA"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
                 />
               </div>

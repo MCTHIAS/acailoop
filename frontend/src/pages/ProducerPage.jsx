@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { API_URL } from "../api";
 
 export default function ProducerPage() {
   const [volume, setVolume] = useState("");
@@ -30,7 +31,7 @@ export default function ProducerPage() {
     const metadata = user.user_metadata;
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/collections", {
+      const response = await fetch(`${API_URL}/collections`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -51,6 +52,8 @@ export default function ProducerPage() {
             storage_capacity_ton: 50.0,
           },
           volume_kg: parseFloat(volume),
+          origin_address: metadata.address || "Endereço não informado",
+          destination_address: "A definir pela olaria",
         }),
       });
 

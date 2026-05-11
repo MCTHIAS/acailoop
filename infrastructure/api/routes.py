@@ -15,7 +15,6 @@ def health_check():
 @app.route("/collections", methods=["POST"])
 def create_collection():
     data = request.get_json()
-
     try:
         producer = AcaiProducer(
             business_name=data["producer"]["business_name"],
@@ -50,6 +49,8 @@ def create_collection():
             "collected_volume_kg": collection.collected_volume_kg,
             "status": collection.status.value,
             "scheduled_at": collection.scheduled_at.isoformat(),
+            "origin_address": data.get("origin_address", "Endereço não informado"),
+            "destination_address": data.get("destination_address", "Endereço não informado")
         }).execute()
 
         return jsonify({
@@ -63,24 +64,42 @@ def create_collection():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/collections", methods=["GET"])
-def list_collections():
-    try:
-        status_filter = request.args.get("status", "PENDING")
-        supabase = get_supabase_client()
-        result = supabase.table("collections").select("*").eq("status", status_filter).execute()
-        return jsonify(result.data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route('/collections', methods=['GET'])
+def get_collections():
+    status_filter = request.args.get('status')
+    user_name = request.args.get('user_name')
+    role = request.args.get('role')
+
+    supabase = get_supabase_client()
+    query = supabase.table("collections").select("*")
+
+    if status_filter:
+        query = query.eq("status", status_filter)
+
+    if user_name and role:
+        if role == "batedor":
+            query = query.eq("producer_name", user_name)
+        elif role == "motorista" and status_filter != "PENDING":
+            query = query.eq("driver_name", user_name)
+        elif role == "olaria":
+            query = query.eq("brickyard_name", user_name)
+
+    response = query.execute()
+    return jsonify(response.data)
 
 @app.route("/collections/<collection_id>", methods=["PATCH"])
 def update_collection(collection_id):
     data = request.get_json()
     try:
         supabase = get_supabase_client()
-        result = supabase.table("collections").update({
-            "status": data["status"]
-        }).eq("id", collection_id).execute()
+        
+        update_data = {}
+        if "status" in data:
+            update_data["status"] = data["status"]
+        if "driver_name" in data:
+            update_data["driver_name"] = data["driver_name"]
+
+        result = supabase.table("collections").update(update_data).eq("id", collection_id).execute()
         return jsonify({"message": "Collection updated.", "data": result.data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

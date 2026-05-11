@@ -1,15 +1,31 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
+import { API_URL } from "../api";
 
 export default function BrickyardPage() {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
+  const [user, setUser] = useState(null);
 
-  async function fetchCollections() {
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user);
+        fetchCollections(user);
+      } else {
+        setLoading(false);
+      }
+    });
+  }, []);
+
+  async function fetchCollections(currentUser) {
     try {
-      const response = await fetch("http://127.0.0.1:5000/collections?status=ON_ROUTE");
+      const userName = currentUser.user_metadata?.name || "";
+      const role = currentUser.user_metadata?.role || "";
+      const response = await fetch(`${API_URL}/collections?status=ON_ROUTE&user_name=${userName}&role=${role}`);
       const data = await response.json();
-      setCollections(data);
+      setCollections(Array.isArray(data) ? data : []);
     } catch {
       console.error("Erro ao buscar coletas.");
     } finally {
@@ -20,12 +36,12 @@ export default function BrickyardPage() {
   async function confirmReceipt(collectionId) {
     setUpdating(collectionId);
     try {
-      await fetch(`http://127.0.0.1:5000/collections/${collectionId}`, {
+      await fetch(`${API_URL}/collections/${collectionId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "COMPLETED" }),
       });
-      await fetchCollections();
+      fetchCollections(user);
     } catch {
       console.error("Erro ao confirmar recebimento.");
     } finally {
@@ -33,16 +49,12 @@ export default function BrickyardPage() {
     }
   }
 
-  useEffect(() => {
-    fetchCollections();
-  }, []);
-
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-[#8b5cf6] px-4 pt-32 pb-8">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mt-2">Portal da Olaria</h1>
-          <p className="text-orange-300 text-sm mt-1">Coletas em rota para recebimento</p>
+          <p className="text-purple-200 text-sm mt-1">Coletas em rota para recebimento</p>
         </div>
 
         {loading ? (
@@ -73,7 +85,7 @@ export default function BrickyardPage() {
                 <button
                   onClick={() => confirmReceipt(col.id)}
                   disabled={updating === col.id}
-                  className="w-full bg-orange-700 hover:bg-orange-800 text-white font-bold py-3 rounded-xl transition disabled:opacity-50"
+                  className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-xl transition disabled:opacity-50"
                 >
                   {updating === col.id ? "Confirmando..." : "Confirmar Recebimento"}
                 </button>

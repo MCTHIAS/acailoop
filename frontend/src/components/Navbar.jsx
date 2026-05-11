@@ -15,6 +15,7 @@ export default function Navbar({ session }) {
     if (role === "batedor") links.push({ path: "/producer", label: "Painel" });
     if (role === "motorista") links.push({ path: "/driver", label: "Rotas" });
     if (role === "olaria") links.push({ path: "/brickyard", label: "Recepção" });
+    links.push({ path: "/history", label: "Histórico" });
   }
 
   if (session) {

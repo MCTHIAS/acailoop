@@ -8,6 +8,7 @@ import BrickyardPage from "./pages/BrickyardPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import LandingPage from "./pages/LandingPage";
+import HistoryPage from "./pages/HistoryPage";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -62,6 +63,8 @@ export default function App() {
             !session ? <Navigate to="/auth" /> : 
             session.user.user_metadata?.role === "olaria" ? <BrickyardPage /> : <Navigate to={getHomeRoute()} />
           } />
+
+          <Route path="/history" element={!session ? <Navigate to="/auth" /> : <HistoryPage />} />
 
           <Route path="/profile" element={!session ? <Navigate to="/auth" /> : <ProfilePage />} />
 
