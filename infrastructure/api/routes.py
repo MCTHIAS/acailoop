@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from infrastructure.database.supabase_client import get_supabase_client
-from domain.entities import AcaiProducer, Driver, Brickyard
+from domain.entities import AcaiProducer
 from use_cases.request_collection import request_collection
 
 app = Flask(__name__)
@@ -21,37 +21,24 @@ def create_collection():
             latitude=data["producer"]["latitude"],
             longitude=data["producer"]["longitude"],
         )
-        driver = Driver(
-            name=data["driver"]["name"],
-            license_plate=data["driver"]["license_plate"],
-            max_capacity_kg=data["driver"]["max_capacity_kg"],
-        )
-        brickyard = Brickyard(
-            company_name=data["brickyard"]["company_name"],
-            latitude=data["brickyard"]["latitude"],
-            longitude=data["brickyard"]["longitude"],
-            storage_capacity_ton=data["brickyard"]["storage_capacity_ton"],
-        )
 
         collection = request_collection(
             producer=producer,
-            driver=driver,
-            brickyard=brickyard,
             volume_kg=data["volume_kg"],
         )
 
         supabase = get_supabase_client()
-        supabase.table("collections").insert({
+        
+        insert_data = {
             "id": collection.id,
             "producer_name": producer.business_name,
-            "driver_name": driver.name,
-            "brickyard_name": brickyard.company_name,
             "collected_volume_kg": collection.collected_volume_kg,
             "status": collection.status.value,
             "scheduled_at": collection.scheduled_at.isoformat(),
-            "origin_address": data.get("origin_address", "Endereço não informado"),
-            "destination_address": data.get("destination_address", "Endereço não informado")
-        }).execute()
+            "origin_address": data.get("origin_address", "Endereço não informado")
+        }
+        
+        supabase.table("collections").insert(insert_data).execute()
 
         return jsonify({
             "message": "Collection created successfully.",
@@ -79,13 +66,18 @@ def get_collections():
     if user_name and role:
         if role == "batedor":
             query = query.eq("producer_name", user_name)
-        elif role == "motorista" and status_filter != "PENDING":
-            query = query.eq("driver_name", user_name)
         elif role == "olaria":
-            query = query.eq("brickyard_name", user_name)
+            if status_filter != "AWAITING_BRICKYARD":
+                query = query.eq("brickyard_name", user_name)
+        elif role == "motorista":
+            if status_filter != "AWAITING_DRIVER":
+                query = query.eq("driver_name", user_name)
 
-    response = query.execute()
-    return jsonify(response.data)
+    try:
+        response = query.execute()
+        return jsonify(response.data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/collections/<collection_id>", methods=["PATCH"])
 def update_collection(collection_id):
@@ -94,12 +86,51 @@ def update_collection(collection_id):
         supabase = get_supabase_client()
         
         update_data = {}
-        if "status" in data:
-            update_data["status"] = data["status"]
-        if "driver_name" in data:
-            update_data["driver_name"] = data["driver_name"]
+        valid_keys = ["status", "driver_name", "brickyard_name", "destination_address"]
+        
+        for key in valid_keys:
+            if key in data:
+                update_data[key] = data[key]
+
+        if not update_data:
+            return jsonify({"error": "No valid fields to update."}), 400
 
         result = supabase.table("collections").update(update_data).eq("id", collection_id).execute()
-        return jsonify({"message": "Collection updated.", "data": result.data}), 200
+        
+        return jsonify({
+            "message": "Collection updated successfully.", 
+            "data": result.data
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/metrics', methods=['GET'])
+def get_metrics():
+    try:
+        supabase = get_supabase_client()
+        response = supabase.table("collections").select("*").eq("status", "COMPLETED").execute()
+        collections = response.data
+
+        total_volume = sum(col.get("collected_volume_kg", 0) for col in collections)
+        total_trips = len(collections)
+        
+        trees_saved = int(total_volume / 150)
+
+        producers = set(col.get("producer_name") for col in collections if col.get("producer_name"))
+        drivers = set(col.get("driver_name") for col in collections if col.get("driver_name"))
+        brickyards = set(col.get("brickyard_name") for col in collections if col.get("brickyard_name"))
+        
+        active_partners = len(producers) + len(drivers) + len(brickyards)
+        
+        if active_partners == 0:
+            active_partners = 0
+
+        return jsonify({
+            "total_volume_kg": total_volume,
+            "total_trips": total_trips,
+            "trees_saved": trees_saved,
+            "active_partners": active_partners
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

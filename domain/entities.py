@@ -2,27 +2,21 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-
-
-# --- Enumerators ---
+from typing import Optional
 
 class DriverStatus(Enum):
     AVAILABLE = "AVAILABLE"
     ON_ROUTE = "ON_ROUTE"
     UNAVAILABLE = "UNAVAILABLE"
 
-
 class CollectionStatus(Enum):
-    PENDING = "PENDING"
+    AWAITING_BRICKYARD = "AWAITING_BRICKYARD"
+    AWAITING_DRIVER = "AWAITING_DRIVER"
     ON_ROUTE = "ON_ROUTE"
     COMPLETED = "COMPLETED"
 
-
-# --- Entities ---
-
 @dataclass
 class AcaiProducer:
-    """Represents an açaí processing establishment that generates seed waste."""
     business_name: str
     latitude: float
     longitude: float
@@ -35,10 +29,8 @@ class AcaiProducer:
         self.current_volume_kg = volume
         return f"Collection of {volume}kg requested by {self.business_name}."
 
-
 @dataclass
 class Driver:
-    """Represents a freight driver responsible for collecting and transporting seeds."""
     name: str
     license_plate: str
     max_capacity_kg: float
@@ -55,10 +47,8 @@ class Driver:
         self.status = DriverStatus.AVAILABLE
         return f"Driver {self.name} completed the route and is now available."
 
-
 @dataclass
 class Brickyard:
-    """Represents a brickyard that consumes açaí seeds as biomass fuel."""
     company_name: str
     latitude: float
     longitude: float
@@ -70,28 +60,36 @@ class Brickyard:
             raise ValueError("Received volume must be greater than zero.")
         return f"{self.company_name} registered receipt of {volume_kg}kg of açaí seeds."
 
-
 @dataclass
 class Collection:
-    """Represents a single collection cycle from producer to brickyard."""
     producer: AcaiProducer
-    driver: Driver
-    brickyard: Brickyard
     collected_volume_kg: float
-    status: CollectionStatus = CollectionStatus.PENDING
+    driver: Optional[Driver] = None
+    brickyard: Optional[Brickyard] = None
+    status: CollectionStatus = CollectionStatus.AWAITING_BRICKYARD
     scheduled_at: datetime = field(default_factory=datetime.now)
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
-    def start(self) -> str:
-        if self.status != CollectionStatus.PENDING:
-            raise ValueError("Collection has already been started or completed.")
+    def assign_brickyard(self, brickyard: Brickyard) -> str:
+        if self.status != CollectionStatus.AWAITING_BRICKYARD:
+            raise ValueError("Collection is not waiting for a brickyard.")
+        self.brickyard = brickyard
+        self.status = CollectionStatus.AWAITING_DRIVER
+        return f"Brickyard {self.brickyard.company_name} assigned to collection {self.id}."
+
+    def start(self, driver: Driver) -> str:
+        if self.status != CollectionStatus.AWAITING_DRIVER:
+            raise ValueError("Collection is not waiting for a driver.")
+        self.driver = driver
         self.status = CollectionStatus.ON_ROUTE
         self.driver.accept_route()
-        return f"Collection {self.id} started."
+        return f"Collection {self.id} started by driver {self.driver.name}."
 
     def complete(self) -> str:
         if self.status != CollectionStatus.ON_ROUTE:
             raise ValueError("Collection must be ON_ROUTE to be completed.")
+        if not self.driver or not self.brickyard:
+            raise ValueError("Collection is missing a driver or a brickyard.")
         self.status = CollectionStatus.COMPLETED
         self.driver.complete_route()
         self.brickyard.register_receipt(self.collected_volume_kg)

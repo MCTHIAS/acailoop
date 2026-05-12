@@ -3,7 +3,8 @@ import { supabase } from "../supabaseClient";
 import { API_URL } from "../api";
 
 export default function HistoryPage() {
-  const [collections, setCollections] = useState([]);
+  const [activeCollections, setActiveCollections] = useState([]);
+  const [completedCollections, setCompletedCollections] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,11 +23,14 @@ export default function HistoryPage() {
       const role = currentUser.user_metadata?.role || "";
       
       const response = await fetch(
-        `${API_URL}/collections?status=COMPLETED&user_name=${userName}&role=${role}`
+        `${API_URL}/collections?user_name=${userName}&role=${role}`
       );
       const data = await response.json();
       
-      setCollections(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        setActiveCollections(data.filter(col => col.status !== "COMPLETED"));
+        setCompletedCollections(data.filter(col => col.status === "COMPLETED"));
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -34,58 +38,98 @@ export default function HistoryPage() {
     }
   }
 
+  const getStatusBadge = (status) => {
+    const config = {
+      AWAITING_BRICKYARD: { label: "Aguardando Olaria", style: "bg-orange-100 text-orange-800" },
+      AWAITING_DRIVER: { label: "Aguardando Motorista", style: "bg-yellow-100 text-yellow-800" },
+      ON_ROUTE: { label: "Em Rota", style: "bg-blue-100 text-blue-800" },
+      COMPLETED: { label: "Finalizada", style: "bg-green-100 text-green-800" }
+    };
+    const current = config[status] || { label: status, style: "bg-gray-100 text-gray-800" };
+
+    return (
+      <span className={`${current.style} text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
+        {current.label}
+      </span>
+    );
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-[#8b5cf6] px-4 pt-32 pb-8">
       <div className="w-full max-w-3xl">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mt-2">Histórico de Coletas</h1>
-          <p className="text-purple-200 text-sm mt-1">Registros das rotas finalizadas com sucesso</p>
+        <div className="text-center mb-10">
+          <h1 className="text-2xl font-bold text-white mt-2">Painel de Acompanhamento</h1>
+          <p className="text-purple-200 text-sm mt-1">Monitore suas coletas em tempo real e acesse o histórico</p>
         </div>
 
         {loading ? (
-          <p className="text-white text-center font-medium">Carregando histórico...</p>
-        ) : collections.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-xl">
-            <p className="text-gray-500 font-medium">Nenhuma coleta finalizada até o momento.</p>
-          </div>
+          <p className="text-white text-center font-medium">Carregando dados...</p>
         ) : (
-          <div className="space-y-4">
-            {collections.map((col) => (
-              <div key={col.id} className="bg-white rounded-2xl shadow-xl p-6 flex flex-col hover:scale-[1.01] transition-transform">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                        Finalizada
-                      </span>
-                      <span className="text-sm font-medium text-gray-500">
-                        {new Date(col.scheduled_at).toLocaleDateString("pt-BR")}
-                      </span>
+          <>
+            <div className="mb-12">
+              <h2 className="text-xl font-bold text-white mb-4 border-b border-purple-400 pb-2">Coletas em Andamento</h2>
+              {activeCollections.length === 0 ? (
+                <div className="bg-white/10 rounded-2xl p-6 text-center border border-white/20">
+                  <p className="text-purple-100 font-medium">Nenhuma coleta em andamento no momento.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {activeCollections.map((col) => (
+                    <div key={col.id} className="bg-white rounded-2xl shadow-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:scale-[1.01] transition-transform">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          {getStatusBadge(col.status)}
+                          <span className="text-sm font-medium text-gray-500">
+                            {new Date(col.scheduled_at).toLocaleDateString("pt-BR")}
+                          </span>
+                        </div>
+                        <p className="font-bold text-gray-800 text-lg mb-1">Origem: {col.producer_name}</p>
+                        <p className="text-gray-600 text-sm">Destino: {col.brickyard_name || "Aguardando aceite..."}</p>
+                        <p className="text-gray-600 text-sm">Motorista: {col.driver_name || "Aguardando motorista..."}</p>
+                      </div>
+                      
+                      <div className="bg-purple-50 px-6 py-4 rounded-xl border border-purple-100 text-center min-w-[140px]">
+                        <span className="block text-3xl font-black text-purple-700">{col.collected_volume_kg}</span>
+                        <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">Quilos</span>
+                      </div>
                     </div>
-                    <p className="font-bold text-gray-800 text-xl">{col.producer_name}</p>
-                  </div>
-                  <div className="bg-purple-50 px-4 py-2 rounded-xl border border-purple-100 text-center">
-                    <span className="block text-2xl font-black text-purple-700">{col.collected_volume_kg}kg</span>
-                  </div>
+                  ))}
                 </div>
+              )}
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-4 bg-gray-50 rounded-xl">
-                  <div>
-                    <p className="text-xs font-bold text-purple-400 uppercase tracking-wider">Coleta</p>
-                    <p className="text-sm text-gray-700">{col.origin_address}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-purple-400 uppercase tracking-wider">Entrega (Olaria)</p>
-                    <p className="text-sm text-gray-700">{col.destination_address} ({col.brickyard_name})</p>
-                  </div>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4 border-b border-purple-400 pb-2">Histórico Finalizado</h2>
+              {completedCollections.length === 0 ? (
+                <div className="bg-white/10 rounded-2xl p-6 text-center border border-white/20">
+                  <p className="text-purple-100 font-medium">Nenhuma coleta finalizada até o momento.</p>
                 </div>
-
-                <div className="mt-4 text-xs text-gray-400 font-medium">
-                  Motorista responsável: {col.driver_name}
+              ) : (
+                <div className="space-y-4">
+                  {completedCollections.map((col) => (
+                    <div key={col.id} className="bg-white opacity-80 hover:opacity-100 rounded-2xl shadow p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-opacity">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          {getStatusBadge(col.status)}
+                          <span className="text-sm font-medium text-gray-500">
+                            {new Date(col.scheduled_at).toLocaleDateString("pt-BR")}
+                          </span>
+                        </div>
+                        <p className="font-bold text-gray-800 text-lg mb-1">Origem: {col.producer_name}</p>
+                        <p className="text-gray-600 text-sm">Destino: {col.brickyard_name}</p>
+                        <p className="text-gray-600 text-sm">Motorista: {col.driver_name}</p>
+                      </div>
+                      
+                      <div className="bg-gray-50 px-6 py-4 rounded-xl border border-gray-200 text-center min-w-[140px]">
+                        <span className="block text-2xl font-black text-gray-600">{col.collected_volume_kg}</span>
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quilos</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

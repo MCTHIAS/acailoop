@@ -23,7 +23,7 @@ export default function DriverPage() {
     try {
       const userName = currentUser.user_metadata?.name || "";
       const role = currentUser.user_metadata?.role || "";
-      const response = await fetch(`${API_URL}/collections?status=PENDING&user_name=${userName}&role=${role}`);
+      const response = await fetch(`${API_URL}/collections?status=AWAITING_DRIVER&user_name=${userName}&role=${role}`);
       const data = await response.json();
       setCollections(Array.isArray(data) ? data : []);
     } catch {
@@ -54,14 +54,15 @@ export default function DriverPage() {
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mt-2">Portal do Motorista</h1>
-          <p className="text-purple-200 text-sm mt-1">Coletas disponíveis para retirada</p>
+          <p className="text-purple-200 text-sm mt-1">Coletas prontas (Origem e Destino definidos)</p>
         </div>
 
         {loading ? (
           <p className="text-white text-center">Carregando coletas...</p>
         ) : collections.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center">
-            <p className="text-gray-500 mt-4">Nenhuma coleta pendente no momento.</p>
+          <div className="bg-white rounded-2xl p-8 text-center shadow">
+            <p className="text-gray-500 mt-4">Nenhuma rota disponível no momento.</p>
+            <p className="text-gray-400 text-xs mt-2">Aguarde uma olaria aceitar a carga de um batedor.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -73,8 +74,8 @@ export default function DriverPage() {
                     <p className="text-purple-600 text-xs font-bold uppercase mt-1">Local da Coleta:</p>
                     <p className="text-gray-600 text-sm">{col.origin_address}</p>
                   </div>
-                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1 rounded-full">
-                    {col.status}
+                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">
+                    AGUARDANDO MOTORISTA
                   </span>
                 </div>
 
@@ -94,7 +95,7 @@ export default function DriverPage() {
                   disabled={updating === col.id}
                   className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-xl transition disabled:opacity-50"
                 >
-                  {updating === col.id ? "Aceitando..." : "Aceitar Rota"}
+                  {updating === col.id ? "Aceitando..." : "Aceitar e Iniciar Rota"}
                 </button>
               </div>
             ))}

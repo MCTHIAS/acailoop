@@ -1,15 +1,10 @@
-from domain.entities import Collection, CollectionStatus
+from domain.entities import Collection, Driver, CollectionStatus
 
-
-def assign_driver(collection: Collection) -> str:
-    """
-    Use case: assigns a driver to a pending collection and starts the route.
-    The driver's status is updated to ON_ROUTE inside collection.start().
-    """
-    if collection.status != CollectionStatus.PENDING:
+def assign_driver(collection: Collection, driver: Driver) -> str:
+    if collection.status != CollectionStatus.AWAITING_DRIVER:
         raise ValueError(
-            f"Cannot assign driver. Collection {collection.id} is not PENDING."
+            f"Cannot assign driver. Collection {collection.id} is not AWAITING_DRIVER."
         )
 
-    result = collection.start()
+    result = collection.start(driver)
     return result

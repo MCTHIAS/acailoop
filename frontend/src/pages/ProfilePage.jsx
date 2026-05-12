@@ -4,7 +4,19 @@ import { supabase } from "../supabaseClient";
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState("batedor");
+  
   const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  
+  const [driverName, setDriverName] = useState("");
+  const [driverPhone, setDriverPhone] = useState("");
+  const [licensePlate, setLicensePlate] = useState("");
+  const [maxCapacity, setMaxCapacity] = useState("");
+
+  const [brickyardName, setBrickyardName] = useState("");
+  const [brickyardAddress, setBrickyardAddress] = useState("");
+  const [storageCapacity, setStorageCapacity] = useState("");
+
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -13,8 +25,22 @@ export default function ProfilePage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUser(user);
-        setRole(user.user_metadata?.role || "batedor");
-        setName(user.user_metadata?.name || "");
+        
+        const metadata = user.user_metadata || {};
+        const currentRole = metadata.role || "batedor";
+        
+        setRole(currentRole);
+        setName(metadata.name || "");
+        setAddress(metadata.address || "");
+        
+        setDriverName(metadata.driver_name || "");
+        setDriverPhone(metadata.driver_phone || "");
+        setLicensePlate(metadata.license_plate || "");
+        setMaxCapacity(metadata.max_capacity_kg?.toString() || "");
+        
+        setBrickyardName(metadata.brickyard_name || "");
+        setBrickyardAddress(metadata.brickyard_address || "");
+        setStorageCapacity(metadata.storage_capacity_ton?.toString() || "");
       }
     });
   }, []);
@@ -23,9 +49,25 @@ export default function ProfilePage() {
     setLoading(true);
     setStatus(null);
 
+    const updateData = {
+      role: role,
+      
+      name: role === "batedor" ? name : null,
+      address: role === "batedor" ? address : null,
+      
+      driver_name: role === "motorista" ? driverName : null,
+      driver_phone: role === "motorista" ? driverPhone : null,
+      license_plate: role === "motorista" ? licensePlate : null,
+      max_capacity_kg: role === "motorista" ? parseFloat(maxCapacity) || 0 : null,
+      
+      brickyard_name: role === "olaria" ? brickyardName : null,
+      brickyard_address: role === "olaria" ? brickyardAddress : null,
+      storage_capacity_ton: role === "olaria" ? parseFloat(storageCapacity) || 0 : null,
+    };
+
     try {
       const { error } = await supabase.auth.updateUser({
-        data: { role, name }
+        data: updateData
       });
       if (error) throw error;
       
@@ -78,27 +120,125 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Negócio ou Usuário</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
-            />
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Conta</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
             >
-              <option value="batedor">Batedor</option>
-              <option value="motorista">Motorista</option>
+              <option value="batedor">Batedor de Açaí</option>
+              <option value="motorista">Motorista de Frete</option>
               <option value="olaria">Olaria</option>
             </select>
           </div>
+
+          {role === "batedor" && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Negócio</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Açaí do João"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Endereço de Origem</label>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Rua, Número, Bairro - Cidade"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {role === "motorista" && (
+            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                <input
+                  type="text"
+                  value={driverName}
+                  onChange={(e) => setDriverName(e.target.value)}
+                  placeholder="Seu nome"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Número para Contato</label>
+                <input
+                  type="text"
+                  value={driverPhone}
+                  onChange={(e) => setDriverPhone(e.target.value)}
+                  placeholder="(91) 90000-0000"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Placa do Veículo</label>
+                  <input
+                    type="text"
+                    value={licensePlate}
+                    onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                    placeholder="ABC-1234"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500 uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade (kg)</label>
+                  <input
+                    type="number"
+                    value={maxCapacity}
+                    onChange={(e) => setMaxCapacity(e.target.value)}
+                    placeholder="Ex: 1500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {role === "olaria" && (
+            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Olaria</label>
+                <input
+                  type="text"
+                  value={brickyardName}
+                  onChange={(e) => setBrickyardName(e.target.value)}
+                  placeholder="Ex: Olaria São José"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Endereço de Entrega</label>
+                <input
+                  type="text"
+                  value={brickyardAddress}
+                  onChange={(e) => setBrickyardAddress(e.target.value)}
+                  placeholder="Localização da olaria"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade de Estoque (Toneladas)</label>
+                <input
+                  type="number"
+                  value={storageCapacity}
+                  onChange={(e) => setStorageCapacity(e.target.value)}
+                  placeholder="Ex: 50"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-800 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+          )}
+
         </div>
 
         <button

@@ -12,10 +12,10 @@ export default function Navbar({ session }) {
   }
 
   if (role) {
-    if (role === "batedor") links.push({ path: "/producer", label: "Painel" });
+    if (role === "batedor") links.push({ path: "/producer", label: "Solicitar Coleta" });
     if (role === "motorista") links.push({ path: "/driver", label: "Rotas" });
     if (role === "olaria") links.push({ path: "/brickyard", label: "Recepção" });
-    links.push({ path: "/history", label: "Histórico" });
+    links.push({ path: "/history", label: "Minhas Coletas" });
   }
 
   if (session) {
@@ -29,7 +29,7 @@ export default function Navbar({ session }) {
 
   return (
     <div className="fixed top-4 left-0 right-0 z-50 px-4">
-      <nav className="mx-auto max-w-screen-xl bg-black/20 backdrop-blur-lg border border-white/10 rounded-full shadow-lg shadow-black/20 px-8 py-4 flex items-center justify-between">
+      <nav className="mx-auto max-w-screen-xl bg-transparent backdrop-blur-sl border border-white/10 rounded-full shadow-lg shadow-black/10 px-8 py-4 flex items-center justify-between">
         <Link to="/" className="text-white font-bold text-xl tracking-tight">
           AçaíLoop
         </Link>
