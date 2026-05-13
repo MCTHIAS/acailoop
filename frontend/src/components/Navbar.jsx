@@ -59,7 +59,7 @@ export default function Navbar({ session }) {
             {!session ? (
               <Link
                 to="/auth"
-                className="px-5 py-2 font-semibold rounded-full transition-all ease-linear hover:bg-purple-400/20 hover:shadow-inner focus:bg-gradient-to-r focus:from-purple-400 focus:to-purple-600 focus:text-white text-black hover:text-white"
+                className="px-5 py-2 font-semibold rounded-full transition-all ease-linear hover:bg-purple-400/20 hover:shadow-inner focus:bg-gradient-to-r focus:from-purple-400 focus:to-purple-600 focus:text-white text-neutral-200 hover:text-white"
               >
                 Entrar / Cadastrar
               </Link>
