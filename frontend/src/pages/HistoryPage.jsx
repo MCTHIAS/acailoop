@@ -86,6 +86,13 @@ export default function HistoryPage() {
                         <p className="font-bold text-gray-800 text-lg mb-1">Origem: {col.producer_name}</p>
                         <p className="text-gray-600 text-sm">Destino: {col.brickyard_name || "Aguardando aceite..."}</p>
                         <p className="text-gray-600 text-sm">Motorista: {col.driver_name || "Aguardando motorista..."}</p>
+                        
+                        {col.status === "ON_ROUTE" && (
+                          <div className="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                            <p className="mb-1"><span className="font-semibold text-gray-700">Coleta:</span> {col.origin_address || "Endereço não informado"}</p>
+                            <p><span className="font-semibold text-gray-700">Entrega:</span> {col.destination_address || "Endereço não informado"}</p>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="bg-purple-50 px-6 py-4 rounded-xl border border-purple-100 text-center min-w-[140px]">

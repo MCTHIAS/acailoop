@@ -36,7 +36,8 @@ export default function Navbar({ session }) {
       <nav className={`mx-auto max-w-screen-xl bg-transparent backdrop-blur-md border border-white/10 shadow-lg shadow-black/10 transition-colors duration-500 ease-in-out rounded-[2rem] md:rounded-full ${isMobileMenuOpen ? 'bg-neutral-900/60' : ''}`}>
         
         <div className="px-6 md:px-8 py-4 flex items-center justify-between">
-          <Link to="/" className={`text-white font-bold text-xl tracking-tight transition-transform duration-300 ${isMobileMenuOpen ? 'scale-105' : 'scale-100'}`}>
+          <Link to="/" className={`flex items-center gap-3 text-white font-bold text-xl tracking-tight transition-transform duration-300 ${isMobileMenuOpen ? 'scale-105' : 'scale-100'}`}>
+            <img src="/favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
             AçaíLoop
           </Link>
 
