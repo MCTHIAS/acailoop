@@ -1,5 +1,19 @@
 # AçaíLoop — Logística Verde B2B
 
+<p align="center">
+  <a href="https://acailoop.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/Acessar_Plataforma-AçaíLoop-8b5cf6?style=for-the-badge" alt="Acessar Plataforma" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask" />
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
+</p>
+
 > **Protótipo de extensão universitária** | Região Metropolitana de Belém, PA
 
 > **Status:** MVP completo — ciclo de coleta funcional de ponta a ponta (Batedor → Olaria → Motorista).
@@ -22,6 +36,25 @@ A plataforma **otimiza rotas de coleta** e elimina a fricção de coordenação 
 
 ---
 
+## Demonstração Visual
+
+![Landing Page AçaíLoop](./docs/print1(pc).jpeg)
+
+![Painel Mobile](./docs/print3(cell).jpeg)
+
+---
+
+## Interface e Usabilidade (Frontend)
+
+O frontend foi desenvolvido com foco em **Mobile First**, garantindo que trabalhadores operacionais (motoristas e batedores) consigam utilizar o sistema na rua sem atritos.
+
+Principais entregas de UI:
+* **Navegação Responsiva:** Navbar com menu hambúrguer dinâmico e transições suaves.
+* **Painel de Rastreamento (HistoryPage):** Renderização condicional de status usando badges coloridas.
+* **Roteirização Dinâmica:** Quando uma coleta entra no status `ON_ROUTE`, o sistema exibe automaticamente os endereços exatos de origem e destino na interface do motorista.
+
+---
+
 ## Estratégia de FinOps — Custo Zero no MVP
 
 Embora a arquitetura pudesse ser inteiramente provisionada na AWS, adotamos uma estratégia de **Bootstrapping com FinOps** desde o início. Instâncias pagas como RDS e EC2 gerariam custos fixos ociosos numa fase de prototipação onde o foco é validação com usuários reais, não escala.
@@ -31,7 +64,7 @@ Embora a arquitetura pudesse ser inteiramente provisionada na AWS, adotamos uma 
 | Camada | Serviço | Justificativa |
 |---|---|---|
 | Banco de Dados | **Supabase** | PostgreSQL real + Auth + Realtime no free tier |
-| Backend (API) | **Render / Railway** | Deploy de containers Python/Flask sem custo fixo |
+| Backend (API) | **Render** | Deploy de containers Python/Flask sem custo fixo |
 | Frontend (SPA) | **Vercel** | Edge network global com CI/CD automático |
 
 > **Resultado:** infraestrutura Cloud-Native com **Custo Operacional Mensal de $0,00** durante a fase piloto — recursos integralmente direcionados à validação de produto.
@@ -49,15 +82,15 @@ Esta separação é implementada em três camadas:
 ```
 acailoop/
 ├── domain/
-│   └── entities.py              # AcaiProducer, Driver, Brickyard, Collection
+│   └── entities.py
 ├── use_cases/
-│   ├── request_collection.py    # Batedor abre solicitação
-│   ├── assign_brickyard.py      # Olaria aceita e define destino
-│   ├── assign_driver.py         # Motorista aceita a rota
-│   └── complete_collection.py   # Olaria confirma recebimento
+│   ├── request_collection.py
+│   ├── assign_brickyard.py
+│   ├── assign_driver.py
+│   └── complete_collection.py
 ├── infrastructure/
 │   ├── api/
-│   │   └── routes.py            # Endpoints REST + métricas
+│   │   └── routes.py
 │   └── database/
 │       └── supabase_client.py
 └── frontend/
@@ -142,7 +175,7 @@ graph TD
         UI_History[Painel de Acompanhamento]
     end
 
-    subgraph "Backend (Core API - Render/Railway)"
+    subgraph "Backend (Core API - Render)"
         API[API RESTful - Python/Flask]
         UseCases{Casos de Uso / Clean Architecture}
     end
@@ -223,7 +256,7 @@ Collection finalized [COMPLETED] — metrics updated
 Backend:      Python 3.14 · Flask · Flask-CORS · Clean Architecture
 Banco:        Supabase (PostgreSQL) · Supabase Auth (JWT)
 Frontend:     React 18 · Vite · Tailwind CSS · React Router DOM
-Deploy:       Vercel (frontend) · Render ou Railway (API)
+Deploy:       Vercel (frontend) · Render (API)
 ```
 
 ---
@@ -231,7 +264,7 @@ Deploy:       Vercel (frontend) · Render ou Railway (API)
 ## Como Rodar Localmente
 
 ### Pré-requisitos
-- Python 3.11+
+- Python 3.14+
 - Node.js 18+
 - Conta no Supabase com a tabela `collections` criada
 
@@ -245,7 +278,6 @@ source .venv/bin/activate    # Linux/Mac
 pip install -r requirements.txt
 
 python -X dev app.py
-# API disponível em http://127.0.0.1:5000
 ```
 
 ### Frontend
@@ -254,7 +286,6 @@ python -X dev app.py
 cd frontend
 npm install
 npm run dev
-# App disponível em http://localhost:5173
 ```
 
 ### Variáveis de Ambiente
@@ -269,16 +300,18 @@ Crie `frontend/.env`:
 ```
 VITE_SUPABASE_URL=https://seu-projeto.supabase.co
 VITE_SUPABASE_KEY=sua_publishable_key
-VITE_API_URL=http://127.0.0.1:5000
+VITE_API_URL=https://seu-projeto.onrender.com
 ```
+
+> Em desenvolvimento local, `VITE_API_URL` pode ser omitido — o frontend faz fallback automático para `http://127.0.0.1:5000`.
 
 ---
 
 ## Limitações Conhecidas do Protótipo
 
-- **Cold start:** o free tier do Render hiberna após 15 min de inatividade. Mitigável com Railway ou upgrade.
+- **Cold start:** o free tier do Render hiberna após 15 min de inatividade. Mitigável com upgrade.
 - **Coordenadas fixas:** latitude e longitude do batedor são fixas no protótipo. Em produção, seriam capturadas via Geolocation API do browser.
-- **Python 3.14:** requer o flag `-X dev` para inicializar corretamente. Recomenda-se Python 3.11 ou 3.12 para produção.
+- **Python 3.14:** requer o flag `-X dev` para inicializar corretamente.
 
 ---
 
