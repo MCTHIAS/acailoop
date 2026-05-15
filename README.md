@@ -38,9 +38,9 @@ A plataforma **otimiza rotas de coleta** e elimina a fricção de coordenação 
 
 ## Demonstração Visual
 
-![Landing Page AçaíLoop](./docs/print1(pc).jpeg)
+<img src="./docs/print1(pc).jpeg" width="700" alt="Landing Page AçaíLoop" />
 
-![Painel Mobile](./docs/print3(cell).jpeg)
+<img src="./docs/print3(cell).jpeg" width="300" alt="Painel Mobile" />
 
 ---
 
