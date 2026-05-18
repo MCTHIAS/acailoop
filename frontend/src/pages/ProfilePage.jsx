@@ -94,7 +94,7 @@ export default function ProfilePage() {
       if (error) throw error;
 
       await supabase.auth.signOut();
-      window.location.href = "/auth";
+      window.location.href = "/";
     } catch (error) {
       setStatus({ type: "error", message: error.message });
       setIsDeleting(false);
